@@ -28,7 +28,7 @@ class CSBNode
 	    this->order = order;
 	    // We can have between order and 2*order (incl) keys
 	    // Hence allocate an array to store this number of keys
-	    this->data = new uint64_t[2*order];
+	    this->data = new uint64_t[2*order+2];
 	    this->isLeaf = true;
 	    this->nKeys = 0;
 	    // Preallocate an array which hold pointers to child, but store reference only to leftmost child
