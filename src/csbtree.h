@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <iostream>
 #include <stdint.h>
+#include <cstdio>
+#include <cstring>
 
 using namespace std;
 
@@ -29,39 +31,35 @@ class CSBNode
 	    this->isLeaf = true;
 	    this->nKeys = 0;
 	    // Preallocate an array which hold pointers to child, but store reference only to leftmost child
-	    // if there are 2*order keys, we can have upto 2*order+1 pointers to children
-	    this->left_child = new CSBNode*[2*order+1];
+	    // if there are 2*order keys, we can have upto 2*order+1 pointers to children.
+	    // We allocate 2*order+3 which will be used later
+	    this->left_child = new CSBNode*[2*order+3];
 	    // Initially they point to nothing. Explicitly de-reference them to avoid leaving them dangling
-	    for(int i=0;i<2*order+1;i++)
+	    for(int i=0;i<2*order+4;i++)
 	    {
                this->left_child[i] = NULL; 
 	    }
 	}
+
 	/**
 	 * Add key to node.
 	 * Return index on success, -1 on failure
 	 */
-	int addKeyToNode(uint64_t key)
+	int addKeyToNode(uint64_t key, int index)
 	{
-	    if(this->nKeys < 2*order) {
+	    if(this->nKeys < 2*order+2) {
 	        // Find right position to insert at
 		if(this->nKeys == 0)
 		{
 	            // First time inserting key
 		    this->data[0] = key;
+		    this->nKeys++;
 		    // Leave it upto higher level logic to adjust child pointers
 		    // It will be NULL by default at this stage
 		    return 0;
 		}
 		else
 		{
-		    // Find the right index for new key
-		    int index = 0;
-		    // TODO: Can use binary-search based techniques since keys are stored?
-		    while(index < this->nKeys && this->data[index] < key)
-		    {
-		        index++;
-		    }
 		    // Need to move everything right and put this key at 'index'
 		    for(int i=this->nKeys-1;i>=index;--i)
 		    {
@@ -83,7 +81,6 @@ class CSBNode
 		    return index;
 		}
 	    }
-	    // Else, we require the node to split
 	    // Will handle at higher level since this is done using CoW
 	    return -1;
 	}
@@ -113,6 +110,20 @@ class CSBNode
 		}
 	    }
 	    return false;
+	}
+
+	/**
+	 * Return first index greater than key
+	 */
+	int getIndex(uint64_t key)
+	{
+            // TODO: Use binary search since keys will be sorted
+	    int index = 0;
+	    while(index < this->nKeys && this->data[index]<key)
+	    {
+		index++;
+	    }
+	    return index;
 	}
 
 	/**
