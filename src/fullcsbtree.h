@@ -81,7 +81,7 @@ class FullCSBTree : public CSBTree
     public:
         FullCSBTree(int num) : CSBTree(num)
 	{
-	    root = new CSBNode(num);
+	    this->root = new CSBNode(num);
 	}
 
 	int insert(uint64_t key)
@@ -92,17 +92,24 @@ class FullCSBTree : public CSBTree
 
 	    rightChild = insertInternal(root, key, &median);
 
-	    if(rightChild)
+	    if(rightChild != NULL)
 	    {
                 // need to split the root
-		printf("FullCSBTreeLL::insert root split for key %lu\n", key);
+		printf("FullCSBTree::insert root split for key %lu\n", key);
 		leftChild = new CSBNode(d);
-		memmove(leftChild, root, sizeof(*leftChild));
-		root->nKeys = 1;
-		root->isLeaf = false;
-		root->data[0] = median;
-		root->left_child[0] = leftChild;
-		root->left_child[1] = rightChild;
+                int i;
+                for(i=0;i<root->nKeys;i++)
+                {
+                    leftChild->data[i] = root->data[i];
+                    leftChild->left_child[i] = root->left_child[i];
+                }
+                leftChild->left_child[i] = root->left_child[i];
+                leftChild->nKeys = root->nKeys;
+		this->root->nKeys = 1;
+		this->root->isLeaf = false;
+		this->root->data[0] = median;
+		this->root->left_child[0] = leftChild;
+		this->root->left_child[1] = rightChild;
 	    }
 	    return 0;
 	}

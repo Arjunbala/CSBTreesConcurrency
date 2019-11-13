@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <cstdio>
 #include <cstring>
+#include <stdlib.h>
 
 using namespace std;
 
@@ -33,7 +34,9 @@ class CSBNode
 	    // Preallocate an array which hold pointers to child, but store reference only to leftmost child
 	    // if there are 2*order keys, we can have upto 2*order+1 pointers to children.
 	    // We allocate 2*order+3 which will be used later
-	    this->left_child = new CSBNode*[2*order+3];
+	    //this->left_child = new CSBNode*[2*order+3];
+            CSBNode *array[2*order+3] = {NULL};
+            this->left_child = array;
 	    // Initially they point to nothing. Explicitly de-reference them to avoid leaving them dangling
 	    for(int i=0;i<2*order+4;i++)
 	    {
@@ -137,6 +140,24 @@ class CSBNode
 	    }
 	    return 0;
 	}
+
+        void printInorder()
+        {
+            int i;
+            for(i=0;i<this->nKeys;i++)
+            {
+                if(!this->isLeaf)
+                {
+                    this->left_child[i]->printInorder();
+                }
+                printf("%lu ", this->data[i]);
+            }
+            if(!this->isLeaf)
+            {
+                this->left_child[i]->printInorder();
+            }
+            printf("\n");
+        }
 };
 
 /**
@@ -155,7 +176,6 @@ class CSBTree
 	CSBTree(int order)
 	{
 	    d = order;
-	    root = NULL;
 	}
 
 	/**
@@ -186,4 +206,12 @@ class CSBTree
 	    cout<<"Printing!"<<endl;
 	    // TODO: Implement
 	}
+
+        /**
+         * Print inorder traversal
+         */
+        void printInorder()
+        {
+            root->printInorder();
+        }
 };
