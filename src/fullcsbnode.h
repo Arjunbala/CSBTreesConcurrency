@@ -179,7 +179,7 @@ class CSBNode
                 	cout<<"down";
                     (this->p_child+i)->printInorder();
                 }
-                printf("%llu ", this->data[i]);
+                printf("%lu ", this->data[i]);
             }
             if(i>0 && !this->isLeaf)
             {
@@ -193,7 +193,7 @@ class CSBNode
         {
             for(int i=0;i<this->nKeys;i++)
             {
-                printf("%llu ", this->data[i]);
+                printf("%lu ", this->data[i]);
             }
             printf("\n");
         }

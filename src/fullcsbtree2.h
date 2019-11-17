@@ -14,7 +14,7 @@ class FullCSBTree : public CSBTree
 		    if(root->isLeaf)
 		    {
 		        // Need to insert key here
-				printf("FullCSBTree::insertInternal inserting %llu at leaf node\n", key);
+				printf("FullCSBTree::insertInternal inserting %lu at leaf node\n", key);
 				cout<<"before insert leaf node: ";
 				root->printData();
 				int ret = root->addKeyToNode(key, index);
@@ -24,13 +24,13 @@ class FullCSBTree : public CSBTree
 				if (ret == -1)
 				{
 				    // Insertion went wrong
-				    printf("FullCSBTree::insertInternal insert failure at leaf for %llu\n", key);
+				    printf("FullCSBTree::insertInternal insert failure at leaf for %lu\n", key);
 				    exit(1);
 				}
 		    }
 		    else
 		    {
-				printf("FullCSBTree::insertInternal moving to child node at %d for key %llu\n", index, key);
+				printf("FullCSBTree::insertInternal moving to child node at %d for key %lu\n", index, key);
 				bool child_split = insertInternal(root->p_child+index, key);
 				if(child_split)
 				{
@@ -41,7 +41,7 @@ class FullCSBTree : public CSBTree
 					uint64_t mid = old_child->data[old_nKeys/2];
 
 					// need to add a new key at this level
-				    printf("FullCSBTree::insertInternal adding new key at non-leaf %llu\n", mid);
+				    printf("FullCSBTree::insertInternal adding new key at non-leaf %lu\n", mid);
 
 				    // Also shifts children by 1 after index position
 				    int ret = root->addKeyToNode(mid, index);
@@ -49,7 +49,7 @@ class FullCSBTree : public CSBTree
 				    root->printData();
 				    if(ret == -1)
 				    {
-						printf("FullCSBTree::insertInternal insert failure at non-leaf for %llu\n", key);
+						printf("FullCSBTree::insertInternal insert failure at non-leaf for %lu\n", key);
 				    	exit(1);
 				    }
 
