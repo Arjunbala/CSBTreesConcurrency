@@ -169,6 +169,21 @@ class CSBNode
 		    return 0;
 		}
 
+                int search(uint64_t key)
+                {
+                    if(this->isLeaf) {
+                        int index = this->getIndex(key);
+                        if(data[index] == key) {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    } else {
+                        int index = this->getIndex(key);
+                        return (p_child+index)->search(key);
+                    }
+                }
+
         void printInorder()
         {
             int i;
@@ -255,8 +270,7 @@ class CSBTree
 	 */
 	int search(uint64_t key)
 	{
-	    // TODO: Implement
-	    return 0;
+	    return root->search(key);
 	}
 
 	/**

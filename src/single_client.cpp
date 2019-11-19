@@ -17,6 +17,10 @@ int main(int argc, char **argv)
     root->printInorder();
     root->insert(25);
     root->printInorder();
+    cout<<root->search(25)<<endl;
+    cout<<root->search(10)<<endl;
+    cout<<root->search(40)<<endl;
+    cout<<root->search(1)<<endl;
     // cout<<root->root->data[0]<<"\n";
     // cout<<root->root->p_child->nKeys<<": nKeys\n";
     // cout<<root->root->p_child->data[0]<<"\n";
