@@ -38,7 +38,7 @@ class CSBNode
 		    this->isLeaf = isLeaf;
 		    // We can have between order and 2*order (incl) keys
 		    // Hence allocate an array to store this number of keys
-		    this->data = new uint64_t[2*order+1];
+		    this->data = new uint64_t[2*order+3];
 		    this->nKeys = 0;
 		    this->p_child = NULL;
 		}
@@ -104,7 +104,7 @@ class CSBNode
 				    	// for(int i=this->nKeys-1;i>index;--i)
 				    	for(int i=this->nKeys;i>index;--i)
 				    	{
-				    		(this->p_child+(i+1))->copyFromNode(this->p_child+i);
+				    		(this->p_child+i)->copyFromNode(this->p_child+i-1);
 				    	}
 						// Fix the two child pointers unknown for now. Higher level will correct it
 						(this->p_child+(index+1))->copyFromNode(this->p_child+index);
