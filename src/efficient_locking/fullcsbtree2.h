@@ -19,6 +19,7 @@ class FullCSBTree : public CSBTree
 				root->printData();
 #ifdef LOCKING
                                 root->acquireLock();
+                                root->setHighKeyIfNecessary(key);
 #endif
 				int ret = root->addKeyToNode(key, index);
 #ifdef LOCKING
@@ -37,6 +38,9 @@ class FullCSBTree : public CSBTree
 		    else
 		    {
 				printf("FullCSBTree::insertInternal moving to child node at %d for key %lu\n", index, key);
+#ifdef LOCKING
+                                (root->p_child+index)->setHighKeyIfNecessary(key);
+#endif
 				bool child_split = insertInternal(root->p_child+index, key);
                                 
 				if(child_split)
@@ -49,6 +53,13 @@ class FullCSBTree : public CSBTree
                                         old_child->acquireLock();
                                         // We may have a case here where the current node has split.
                                         // Hence, we need to keep moving right to find the right parent for this child
+                                        while(key > root->getHighKey() && (root+sizeof(root)) != NULL) {
+                                            // acquire lock over next sibling
+                                            (root+sizeof(root))->acquireLock();
+                                            // release lock over current sibling
+                                            root->releaseLock();
+                                            root = root+sizeof(root);
+                                        }
 #endif
 					bool is_child_leaf = old_child->isLeaf;
 					int old_nKeys = old_child->nKeys;
