@@ -18,24 +18,26 @@ class CSBNode
 		bool isLeaf; // Indicates if this node is a leaf node
 		CSBNode *p_child; // Pointer to leftmost child
 		int nKeys; // Number of keys currently held by this node
+		uint64_t high_key; // Highest key value with descendents of this node
+
 #ifdef LOCKING
-                uint64_t high_key; // Highest key value with descendents of this node
-                pthread_mutex_t node_lock; // lock associated with this node
+		pthread_mutex_t node_lock; // lock associated with this node
 #endif
 
 		CSBNode()
 		{
-	            this->order = 0;
+	        this->order = 0;
 		    this->isLeaf = true;
 		    this->data = NULL;
 		    this->nKeys = 0;
 		    this->p_child = NULL;
+		    this->high_key = 0;
+
 #ifdef LOCKING
-                    this->high_key = 0;
-                    if (pthread_mutex_init(&node_lock, NULL) != 0) { 
-                        cout<<"Could not init node lock"<<endl;
-                        exit(1);
-                    } 
+            if (pthread_mutex_init(&node_lock, NULL) != 0) { 
+                cout<<"Could not init node lock"<<endl;
+                exit(1);
+            } 
 #endif
 		}
 
@@ -52,12 +54,13 @@ class CSBNode
 		    this->data = new uint64_t[2*order+3];
 		    this->nKeys = 0;
 		    this->p_child = NULL;
+		    this->high_key = 0;
+
 #ifdef LOCKING
-                    this->high_key = 0;
-                    if (pthread_mutex_init(&node_lock, NULL) != 0) {
-                        cout<<"Could not init node lock"<<endl;
-                        exit(1);
-                    }
+            if (pthread_mutex_init(&node_lock, NULL) != 0) {
+                cout<<"Could not init node lock"<<endl;
+                exit(1);
+            }
 #endif
 		}
 
@@ -89,9 +92,7 @@ class CSBNode
 		    this->data = new uint64_t[2*order+1];
 		    this->nKeys = 0;
 		    this->p_child = NULL;
-#ifdef LOCKING
-                    this->high_key = 0;
-#endif
+		    this->high_key = 0;
 		}
 
 		/**
@@ -106,9 +107,7 @@ class CSBNode
 			{
 				this->data[i] = node->data[i];
 			}
-#ifdef LOCKING
-                        this->high_key = node->high_key;
-#endif
+			this->high_key = node->high_key;
 		}
 
 		/**
@@ -158,26 +157,24 @@ class CSBNode
 		    return -1;
 		}
 
-#ifdef LOCKING
-                // Return 1 if update to high key, 0 if no update
-                int setHighKeyIfNecessary(uint64_t key)
-                {
-                    if (key > this->high_key) {
-                        this->high_key = key;
-                         return 1;
-                    }
-                    return 0;
-                }
+        // Return 1 if update to high key, 0 if no update
+        int setHighKeyIfNecessary(uint64_t key)
+        {
+            if (key > this->high_key) {
+                this->high_key = key;
+                 return 1;
+            }
+            return 0;
+        }
 
-                // Return high key at this node
-                uint64_t getHighKey() {
-                    return this->high_key;
-                }
-#endif
+        // Return high key at this node
+        uint64_t getHighKey() {
+            return this->high_key;
+        }
 
 		/**
 		 * Delete key from node
-	         * Return 0 on success, -1 on failure
+         * Return 0 on success, -1 on failure
 		 */
 		int deleteKeyFromNode(uint64_t key)
 		{

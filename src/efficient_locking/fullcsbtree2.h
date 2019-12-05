@@ -6,7 +6,7 @@
 class FullCSBTree : public CSBTree
 {
     private:
-        bool insertInternal(CSBNode *root, uint64_t key)
+        bool insertInternal(CSBNode *root, uint64_t key, bool &is_failed)
 		{
 		    
 		    // First search which position is the right one to start traversing
@@ -15,33 +15,34 @@ class FullCSBTree : public CSBTree
 		    {
 		        // Need to insert key here
 				printf("FullCSBTree::insertInternal inserting %lu at leaf node\n", key);
-				cout<<"before insert leaf node: ";
-				root->printData();
 #ifdef LOCKING
                                 root->acquireLock();
-                                root->setHighKeyIfNecessary(key);
 #endif
-				int ret = root->addKeyToNode(key, index);
+				int ret = root->addKeyToNode(key, index);	
 #ifdef LOCKING
                                 root->releaseLock();
 #endif
-				cout<<"after insert leaf node: ";
-				root->printData();
 				// Leaf has no child pointers. So no need to do anything
 				if (ret == -1)
 				{
 				    // Insertion went wrong
 				    printf("FullCSBTree::insertInternal insert failure at leaf for %lu\n", key);
-				    exit(1);
+				    is_failed = true;
+				    return false;
 				}
+				root->setHighKeyIfNecessary(key);
 		    }
 		    else
 		    {
 				printf("FullCSBTree::insertInternal moving to child node at %d for key %lu\n", index, key);
-#ifdef LOCKING
-                                (root->p_child+index)->setHighKeyIfNecessary(key);
-#endif
-				bool child_split = insertInternal(root->p_child+index, key);
+                (root->p_child+index)->setHighKeyIfNecessary(key);
+				bool child_split = insertInternal(root->p_child+index, key, is_failed);
+
+				// Some failure at or below child level
+				if(is_failed)
+				{
+                   	return false;
+				}
                                 
 				if(child_split)
 				{
@@ -51,16 +52,31 @@ class FullCSBTree : public CSBTree
                                         root->acquireLock();
                                         // Acquire lock over fully filled child so that we can split it
                                         old_child->acquireLock();
+#endif
+                                        cout<<"Printing root and root+1 address: ";
+                                        cout<<root<<", "<<root+1<<"\n";
+                                        cout<<"Size of node: "<<sizeof(root)<<"\n";
+                                        cout<<"Printing root and root+sizeof(root) address: ";
+                                        cout<<root<<", "<<root+sizeof(root)<<"\n";
+
                                         // We may have a case here where the current node has split.
                                         // Hence, we need to keep moving right to find the right parent for this child
-                                        while(key > root->getHighKey() && (root+sizeof(root)) != NULL) {
+                                        while(key > root->getHighKey() && (root+1) != NULL) {
+#ifdef LOCKING
                                             // acquire lock over next sibling
-                                            (root+sizeof(root))->acquireLock();
+                                            (root+1)->acquireLock();
                                             // release lock over current sibling
                                             root->releaseLock();
-                                            root = root+sizeof(root);
-                                        }
 #endif
+                                            root = root+1;
+                                        }
+
+                    // Case when parent got moved to new node group
+                    if(key > root->getHighKey())
+                    {
+                    	is_failed = true;
+                    	return false;
+                    }
 					bool is_child_leaf = old_child->isLeaf;
 					int old_nKeys = old_child->nKeys;
 					int mid_ind = old_nKeys/2;
@@ -71,16 +87,12 @@ class FullCSBTree : public CSBTree
 
 				    // Also shifts children by 1 after index position
 				    int ret = root->addKeyToNode(mid, index);
-				    cout<<"inserted new key, bottom fix not yet done if any";
-				    root->printData();
 				    if(ret == -1)
 				    {
 						printf("FullCSBTree::insertInternal insert failure at non-leaf for %lu\n", key);
-				    	exit(1);
+				    	is_failed = true;
+                    	return false;
 				    }
-
-				    cout<<"before split old child node: ";
-				    old_child->printData();
 
 				    // copy 2nd half of data into node next to child
 				    for(int i=mid_ind+1;i<old_nKeys;i++)
@@ -92,8 +104,6 @@ class FullCSBTree : public CSBTree
 				    old_child->nKeys = mid_ind+1;
 				    (old_child+1)->nKeys = old_nKeys - (mid_ind + 1);
 
-				    cout<<"new child node: ";
-				    (old_child+1)->printData();
 
 				    // if child is not a leaf create new node group and split in half
 				    if(!is_child_leaf)
@@ -109,9 +119,19 @@ class FullCSBTree : public CSBTree
 
 				    	// Median moves up if child is not leaf
 				    	old_child->nKeys = mid_ind;
+
+				    	//Add correct old child high key
+				    	if ((old_child->p_child+mid_ind)->nKeys>0)
+				    	{
+				    		//Rightmost grandchild node has data so use its high key
+				    		old_child->high_key = (old_child->p_child+mid_ind)->high_key;
+				    	}
+				    	else
+				    	{
+				    		//Rightmost grandchild node has no data so use high key of prev
+				    		old_child->high_key = (old_child->p_child+mid_ind-1)->high_key;
+				    	}
 				    }
-				    cout<<"old child node: ";
-				    old_child->printData();
 #ifdef LOCKING
                                     // Release locks
                                     old_child->releaseLock();
@@ -145,7 +165,7 @@ class FullCSBTree : public CSBTree
         FullCSBTree(int order) : CSBTree(order)
 		{
 			// TODO: Find better way to do this
-		    this->root = new CSBNode[2*order+2];
+		    this->root = new CSBNode[2*order+3];
 		    for(int i=0;i<2*order+2;i++)
 		    {
 		    	(this->root+i)->createData(order,true);
@@ -154,7 +174,13 @@ class FullCSBTree : public CSBTree
 
 		int insert(uint64_t key)
 		{
-		    bool is_root_split = insertInternal(root, key);
+			bool is_failed = false;
+		    bool is_root_split = insertInternal(root, key, is_failed);
+
+		    // insertion failed
+		    if(is_failed){
+		    	return -1;
+		    }
 
 		    if(is_root_split)
 			{
@@ -197,6 +223,18 @@ class FullCSBTree : public CSBTree
 
 			    	// Median moves up if child is not leaf
 			    	root->nKeys = mid_ind;
+
+			    	//Add correct old child high key
+			    	if ((root->p_child+mid_ind)->nKeys>0)
+			    	{
+			    		//Rightmost grandchild node has data so use its high key
+			    		root->high_key = (root->p_child+mid_ind)->high_key;
+			    	}
+			    	else
+			    	{
+			    		//Rightmost grandchild node has no data so use high key of prev
+			    		root->high_key = (root->p_child+mid_ind-1)->high_key;
+			    	}
 				}
 
 			    // Assign new root as root
