@@ -35,7 +35,7 @@ class FullCSBTree : public CSBTree
 		    else
 		    {
 				printf("FullCSBTree::insertInternal moving to child node at %d for key %lu\n", index, key);
-                (root->p_child+index)->setHighKeyIfNecessary(key);
+                                root->setHighKeyIfNecessary(key);
 				bool child_split = insertInternal(root->p_child+index, key, is_failed);
 
 				// Some failure at or below child level
