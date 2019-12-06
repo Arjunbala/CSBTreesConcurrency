@@ -53,11 +53,6 @@ class FullCSBTree : public CSBTree
                                         // Acquire lock over fully filled child so that we can split it
                                         old_child->acquireLock();
 #endif
-                                        cout<<"Printing root and root+1 address: ";
-                                        cout<<root<<", "<<root+1<<"\n";
-                                        cout<<"Size of node: "<<sizeof(root)<<"\n";
-                                        cout<<"Printing root and root+sizeof(root) address: ";
-                                        cout<<root<<", "<<root+sizeof(root)<<"\n";
 
                                         // We may have a case here where the current node has split.
                                         // Hence, we need to keep moving right to find the right parent for this child
