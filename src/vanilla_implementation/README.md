@@ -7,6 +7,6 @@ g++ single_client.cpp -o single_client
 ./single_client
 
 
-### Sample Code
+### Sample Code -
 
 Look at single_client.cpp as a sample on how to initialize and insert/search from a Full CSB+-Tree.
