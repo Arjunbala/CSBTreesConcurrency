@@ -12,5 +12,5 @@ We provide a header file for each of the implementations. Please have a look at 
 
 
 ### Authors
-Arjun Balasubramanian - abalasubram8@wisc.edu
-Vinith Venkatesan - vvenkatesan2@wisc.edu
+- Arjun Balasubramanian : abalasubram8@wisc.edu
+- Vinith Venkatesan : vvenkatesan2@wisc.edu
